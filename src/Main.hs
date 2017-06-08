@@ -1,16 +1,46 @@
-import Prelude hiding (pi)
+import Data.Time.Clock (getCurrentTime)
+import Data.Time.Format (defaultTimeLocale, formatTime)
 
 import Graphics.Rendering.Chart.Easy
 import Graphics.Rendering.Chart.Backend.Diagrams(toFile)
 
-pi :: Double
-pi = 3.1415926535
+-- import qualified Data.Vector as V
+import qualified Data.Vector.Storable as V
+import Numeric.GSL.ODE
+import qualified Numeric.LinearAlgebra as LA
 
-signal :: [Double] -> [(Double,Double)]
-signal xs = [ (x, (sin (x * pi / 45) + 1) / 2 * sin (x * pi / 5)) | x <- xs ]
+xdot :: Double -> [Double] -> [Double]
+xdot t [x, y] =
+  [ 0.2*x - 0.5*x*y -- prey: dx = ax - bxy
+  , 0.5*x*y - 0.1*y -- pred: dy = gxy - dy
+  ]
 
-main = toFile def "mychart.svg" $ do
-    layout_title .= "Amplitude Modulation"
-    setColors [opaque blue, opaque red]
-    plot (line "am" [signal [0, 0.5 .. 400]])
-    plot (points "am points" (signal [0,7..400]))
+time :: LA.Vector Double
+time = LA.linspace 1000 (0, 1000 :: Double)
+
+-- only the solutions
+sol :: LA.Matrix Double
+sol = odeSolve xdot [0.5, 0.5] time
+
+-- takes
+makePlottableTuples :: LA.Vector Double -> LA.Matrix Double -> [[(Double, Double)]]
+makePlottableTuples v m = map (zip (LA.toList v) . LA.toList) (LA.toColumns m)
+
+writePlot :: String -> IO ()
+writePlot filePath = toFile def filePath $ do
+  -- create plot here
+  layout_title .= "Lotka-Volterra"
+  setColors [opaque blue, opaque red]
+  plot $ line "prey"     [makePlottableTuples time sol !! 0]
+  plot $ line "predator" [makePlottableTuples time sol !! 1]
+
+getNowTimeString :: IO String
+getNowTimeString = do
+  now <- getCurrentTime
+  return (formatTime defaultTimeLocale "%F_%H%M%S" now)
+
+-- main :: IO ()
+main = do
+  timeStr <- getNowTimeString
+  writePlot ("plot_" ++ timeStr ++ ".svg")
+
