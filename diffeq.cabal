@@ -25,4 +25,5 @@ executable diffeq
                        diagrams,
                        Chart,
                        Chart-diagrams,
-                       Chart-cairo
+                       Chart-cairo,
+                       time
