@@ -4,13 +4,13 @@ import Data.Time.Format (defaultTimeLocale, formatTime)
 import Graphics.Rendering.Chart.Backend.Diagrams(toFile)
 import Graphics.Rendering.Chart.Easy ((.=), def, layout_title, setColors, opaque, blue, red, plot, line)
 
-import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toColumns)
+import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, toColumns)
 import Numeric.GSL.ODE
 
 type D = Double
 
 -- TODO: bifurcation diagram
--- TODO: write to CSV
+-- TODO: write bifurcation data to CSV
 
 -- TODO: nicer way to manage parameters, instead of passing globals?
 x0, y0, α, β, γ, δ :: D
@@ -54,14 +54,22 @@ getNowTimeString = do
   now <- getCurrentTime
   return (formatTime defaultTimeLocale "%F_%H%M%S" now)
 
-writePlot :: FilePath -> IO ()
-writePlot filePath = toFile def filePath $ do
-  layout_title .= "Lotka-Volterra"
+timePlot = do
+  layout_title .= "Lotka-Volterra - time series"
   setColors [opaque blue, opaque red]
   plot $ line "prey"     [makePlottableTuples time sol !! 0]
   plot $ line "predator" [makePlottableTuples time sol !! 1]
 
+phasePlot = do
+  layout_title .= "Lotka-Volterra - phase space"
+  setColors [opaque blue]
+  plot $ line "prey - predator" [ map (\[x, y] -> (x, y)) $ toLists sol]
+
+-- writePlot filePath plot = toFile def filePath $ plot
+writePlot = toFile def
+
 main :: IO ()
 main = do
   timeStr <- getNowTimeString
-  writePlot ("plot_" ++ timeStr ++ ".svg")
+  writePlot ("plots/timePlot_" ++ timeStr ++ ".svg") timePlot
+  writePlot ("plots/phasePlot_" ++ timeStr ++ ".svg") phasePlot
