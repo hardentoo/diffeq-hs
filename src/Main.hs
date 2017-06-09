@@ -25,8 +25,8 @@ y0 = 0.5 -- initial value of y
 
 -- the differential equations themselves
 dx, dy :: D -> D -> D
-dx x y = α*x   - β*x*y -- prey: dx = ax - bxy
-dy x y = δ*x*y - γ*y   -- pred: dy = gxy - dy
+dx x y = α*x   - β*x*y -- prey
+dy x y = δ*x*y - γ*y   -- predator
 
 -- the differential equations as the system to solve
 eqs :: D -> [D] -> [D]
