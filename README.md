@@ -1,1 +1,3 @@
-# diffeq
+## diffeq-hs
+
+An exercise in solving differential equations with haskell and plotting their solutions.
