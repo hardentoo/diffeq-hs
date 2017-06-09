@@ -10,7 +10,10 @@ import Numeric.GSL.ODE
 type D = Double
 
 -- TODO: bifurcation diagram
+-- TODO: bifurcation diagram in parallel
 -- TODO: write bifurcation data to CSV
+-- TODO: more concise ways to do different plots etc... map write function?
+-- TODO: find phase relationship (Fourier? min/max correlation)
 
 -- TODO: nicer way to manage parameters, instead of passing globals?
 x0, y0, α, β, γ, δ :: D
