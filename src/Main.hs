@@ -14,8 +14,8 @@ type D = Double
 -- TODO: write bifurcation data to CSV
 -- TODO: more concise ways to do different plots etc... map write function?
 -- TODO: find phase relationship (Fourier? min/max correlation)
-
 -- TODO: nicer way to manage parameters, instead of passing globals?
+
 x0, y0, α, β, γ, δ :: D
 -- initial conditions --
 x0 = 0.5 -- initial value of x
@@ -68,8 +68,7 @@ phasePlot = do
   setColors [opaque blue]
   plot $ line "prey - predator" [ map (\[x, y] -> (x, y)) $ toLists sol]
 
--- writePlot filePath plot = toFile def filePath $ plot
-writePlot = toFile def
+writePlot filePath plot = toFile def filePath plot
 
 main :: IO ()
 main = do
