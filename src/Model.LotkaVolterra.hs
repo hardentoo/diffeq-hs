@@ -15,6 +15,7 @@ type D = Double
 -- TODO: more concise ways to do different plots etc... map write function?
 -- TODO: find phase relationship (Fourier? min/max correlation)
 -- TODO: nicer way to manage parameters, instead of passing globals?
+-- TODO: factor out models
 
 x0, y0, α, β, γ, δ :: D
 -- initial conditions --
@@ -58,13 +59,13 @@ getNowTimeString = do
   return (formatTime defaultTimeLocale "%F_%H%M%S" now)
 
 timePlot = do
-  layout_title .= "Lotka-Volterra - time series"
+  layout_title .= "Lotka-Volterra – time series"
   setColors [opaque blue, opaque red]
   plot $ line "prey"     [makePlottableTuples time sol !! 0]
   plot $ line "predator" [makePlottableTuples time sol !! 1]
 
 phasePlot = do
-  layout_title .= "Lotka-Volterra - phase space"
+  layout_title .= "Lotka-Volterra – phase space"
   setColors [opaque blue]
   plot $ line "prey - predator" [ map (\[x, y] -> (x, y)) $ toLists sol]
 
@@ -73,5 +74,5 @@ writePlot filePath plot = toFile def filePath plot
 main :: IO ()
 main = do
   timeStr <- getNowTimeString
-  writePlot ("plots/timePlot_" ++ timeStr ++ ".svg") timePlot
-  writePlot ("plots/phasePlot_" ++ timeStr ++ ".svg") phasePlot
+  writePlot ("plots/LV_timePlot_" ++ timeStr ++ ".svg") timePlot
+  writePlot ("plots/LV_phasePlot_" ++ timeStr ++ ".svg") phasePlot
