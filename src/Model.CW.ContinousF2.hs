@@ -1,7 +1,7 @@
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (defaultTimeLocale, formatTime)
 
-import Graphics.Rendering.Chart.Backend.Diagrams(toFile)
+import qualified Graphics.Rendering.Chart.Backend.Cairo as BC
 import Graphics.Rendering.Chart.Easy ((.=), def, layout_title, setColors, opaque, blue, red, plot, line)
 
 import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, toColumns)
@@ -41,7 +41,7 @@ e  = 1.0
 
 -- initial conditions
 initialCondititions :: [Double] -- [ x0, y0, α0, β0 ]
-initialCondititions = [ 0.5, 0.5, 0.5, 0.5 ]
+initialCondititions = [ 2.0, 1.0, 0.5, 0.5 ]
 
 -- the differential equations themselves
 -- TODO: some equations can be factored out and
@@ -111,20 +111,20 @@ getNowTimeString = do
 timePlot = do
   layout_title .= "Cortez / Weitz – time series"
   -- setColors [opaque blue, opaque red]
-  plot $ line "x" [makePlottableTuples time solution !! 0]
-  plot $ line "y" [makePlottableTuples time solution !! 1]
-  plot $ line "a" [makePlottableTuples time solution !! 2]
-  plot $ line "b" [makePlottableTuples time solution !! 3]
+  plot $ line "prey" [makePlottableTuples time solution !! 0]
+  plot $ line "predator" [makePlottableTuples time solution !! 1]
+  plot $ line "trait α" [makePlottableTuples time solution !! 2]
+  plot $ line "trait β" [makePlottableTuples time solution !! 3]
 
 phasePlot = do
   layout_title .= "Cortez / Weitz – phase space"
   -- setColors [opaque blue]
   plot $ line "prey - predator" [ map (\[x, y, _, _] -> (x, y)) $ toLists solution ]
 
-writePlot filePath plot = toFile def filePath plot
+writePlot filePath plot = BC.toFile def {BC._fo_format=BC.PDF} filePath plot
 
 main :: IO ()
 main = do
   timeStr <- getNowTimeString
-  writePlot ("plots/CW_timePlot_" ++ timeStr ++ ".svg") timePlot
-  writePlot ("plots/CW_phasePlot_" ++ timeStr ++ ".svg") phasePlot
+  writePlot ("plots/CW_timePlot_" ++ timeStr ++ ".pdf") timePlot
+  writePlot ("plots/CW_phasePlot_" ++ timeStr ++ ".pdf") phasePlot

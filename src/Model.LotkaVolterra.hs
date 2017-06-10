@@ -1,7 +1,7 @@
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (defaultTimeLocale, formatTime)
 
-import Graphics.Rendering.Chart.Backend.Diagrams(toFile)
+import qualified Graphics.Rendering.Chart.Backend.Cairo as BC
 import Graphics.Rendering.Chart.Easy ((.=), def, layout_title, setColors, opaque, blue, red, plot, line)
 
 import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, toColumns)
@@ -69,10 +69,10 @@ phasePlot = do
   setColors [opaque blue]
   plot $ line "prey - predator" [ map (\[x, y] -> (x, y)) $ toLists sol]
 
-writePlot filePath plot = toFile def filePath plot
+writePlot filePath plot = BC.toFile def {BC._fo_format=BC.PDF} filePath plot
 
 main :: IO ()
 main = do
   timeStr <- getNowTimeString
-  writePlot ("plots/LV_timePlot_" ++ timeStr ++ ".svg") timePlot
-  writePlot ("plots/LV_phasePlot_" ++ timeStr ++ ".svg") phasePlot
+  writePlot ("plots/LV_timePlot_" ++ timeStr ++ ".pdf") timePlot
+  writePlot ("plots/LV_phasePlot_" ++ timeStr ++ ".pdf") phasePlot
