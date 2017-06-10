@@ -20,4 +20,6 @@ executable diffeq-hs
                        diagrams,
                        Chart,
                        Chart-diagrams,
-                       time
+                       time,
+                       ad,
+                       simple-reflect
