@@ -37,11 +37,11 @@ c1 = 0.01
 δ1 = 1.052
 
 h  = 1.0
-e  = 1.0
+e  = 0.2
 
 -- initial conditions
 initialCondititions :: [Double] -- [ x0, y0, α0, β0 ]
-initialCondititions = [ 2.0, 1.0, 0.5, 0.5 ]
+initialCondititions = [ 1.0, 1.0, 0.2, 0.2 ]
 
 -- the differential equations themselves
 -- TODO: some equations can be factored out and
@@ -54,14 +54,14 @@ dx x y α β = x*ζ*(1 - x/k) - (γ*x*y / (1 + h*x))
     γ = γ0 + γ1*α + γ2*β + γ3*α*β + γ4*β^2
 
 dy :: D -> D -> D -> D -> D
-dy x y α β = c*(γ*x*y / (1 + h*x)) - y*δ
+dy x y α β = c * (γ*x*y / (1 + h*x)) - y*δ
   where
     c = c0 + c1*β
     γ = γ0 + γ1*α + γ2*β + γ3*α*β + γ4*β^2
     δ = δ0 + δ1*β
 
 dα :: D -> D -> D -> D -> D
-dα x y α β = (1/e) * a*(dζ_α * (1 - x/k) + dγ_α * (y / (1 + h*x)))
+dα x y α β = (1/e) * a * (dζ_α * (1 - x/k) + dγ_α * (y / (1 + h*x)))
   where
     a = (α - αMin)*(αMax - α)
     k = k0 + k1*α
@@ -70,13 +70,13 @@ dα x y α β = (1/e) * a*(dζ_α * (1 - x/k) + dγ_α * (y / (1 + h*x)))
     dγ_α = head $ grad (\[α, β] -> auto γ0 + auto γ1*α + auto γ2*β + auto γ3*α*β + auto  γ4*β^2) [α, β]
 
 dβ :: D -> D -> D -> D -> D
-dβ x y α β = (1/e) * b*(c*dγ_β * (1 - x/k) * (x*y/(1 + h*x)) - dδ_β)
+dβ x y α β = (1/e) * b * (c * dγ_β * (x*y/(1 + h*x)) - dδ_β)
   where
     b = (β - βMin)*(βMax - β)
     c = c0 + c1*β
     k = k0 + k1*α
     -- derivatives: ∂y/∂β and dδ/dβ
-    dγ_β = last $ grad (\[α, β] -> auto γ0 + auto γ1*α + auto γ2*β + auto γ3*α*β + auto  γ4*β^2) [α, β]
+    dγ_β = last $ grad (\[α, β] -> auto γ0 + auto γ1*α + auto γ2*β + auto γ3*α*β + auto γ4*β^2) [α, β]
     dδ_β = diff (\β -> auto δ0 + auto δ1*β) β
 
 -- the differential equations as the system to solve
@@ -88,7 +88,7 @@ eqSystem t [x, y, α, β] = [ dx x y α β
 
 -- the time (steps)
 time :: Vector D
-time = linspace 1000 (0, 999 :: D)
+time = linspace 1000 (0, 199 :: D)
 
 -- the solutions matrix
 solution :: Matrix D
@@ -111,10 +111,10 @@ getNowTimeString = do
 timePlot = do
   layout_title .= "Cortez / Weitz – time series"
   -- setColors [opaque blue, opaque red]
-  plot $ line "prey" [makePlottableTuples time solution !! 0]
+  plot $ line "prey"     [makePlottableTuples time solution !! 0]
   plot $ line "predator" [makePlottableTuples time solution !! 1]
-  plot $ line "trait α" [makePlottableTuples time solution !! 2]
-  plot $ line "trait β" [makePlottableTuples time solution !! 3]
+  plot $ line "trait α"  [makePlottableTuples time solution !! 2]
+  plot $ line "trait β"  [makePlottableTuples time solution !! 3]
 
 phasePlot = do
   layout_title .= "Cortez / Weitz – phase space"
