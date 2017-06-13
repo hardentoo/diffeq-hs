@@ -17,10 +17,10 @@ executable diffeq-hs
   build-depends:       base >= 4.7 && < 5,
                        hmatrix,
                        hmatrix-gsl,
-                       diagrams,
+                       --diagrams,
                        Chart,
-                       Chart-diagrams,
+                       --Chart-diagrams,
                        Chart-cairo,
                        time,
-                       ad,
-                       simple-reflect
+                       ad
+                       --simple-reflect
