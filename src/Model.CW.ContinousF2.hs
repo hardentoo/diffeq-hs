@@ -1,4 +1,9 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveGeneric     #-} -- for Dhall
+{-# LANGUAGE RecordWildCards   #-} -- for passing parameters
+{-# LANGUAGE OverloadedStrings #-} -- for Dhall
+
+import qualified Dhall as DC
+import qualified GHC.Generics as G -- for Dhall
 
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (defaultTimeLocale, formatTime)
@@ -11,6 +16,11 @@ import Numeric.AD
 
 type D = Double
 
+data Par = Par {} deriving (Show, G.Generic)
+
+instance DC.Interpret Par
+
+-- constant parameters
 αMin, αMax, βMin, βMax, ζ0, ζ1, ζ2, k0, k1, γ0, γ1, γ2, γ3, γ4, c0, c1, δ0, δ1, h, e :: Double
 αMin = 0.1
 αMax = 1.0

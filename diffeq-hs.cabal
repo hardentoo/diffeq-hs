@@ -20,4 +20,5 @@ executable diffeq-hs
                        Chart,
                        Chart-cairo,
                        time,
-                       ad
+                       ad,
+                       dhall
