@@ -1,6 +1,7 @@
-resolver: lts-8.17
+resolver: lts-8.18
 packages:
-- '.'
-extra-deps: []
+  - '.'
+extra-deps:
+  - dhall-1.3.0
 flags: {}
 extra-package-dbs: []

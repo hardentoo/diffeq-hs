@@ -6,6 +6,6 @@ mkdir ./plots
 
 echo Running "$1"
 
-TIME="$(time (stack runghc "$1"))"
+time (stack runghc "$1")
 
 open ./plots/*
