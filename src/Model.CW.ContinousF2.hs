@@ -14,91 +14,88 @@ import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, fromLis
 import Numeric.GSL.ODE
 import Numeric.AD
 
-type D = Double
-
 data Par = Par {} deriving (Show, G.Generic)
 
 instance DC.Interpret Par
 
 -- constant parameters
-αMin, αMax, βMin, βMax, ζ0, ζ1, ζ2, k0, k1, γ0, γ1, γ2, γ3, γ4, c0, c1, δ0, δ1, h, e :: Double
-αMin = 0.1
-αMax = 1.0
-βMin = 0.1
-βMax = 1.0
-ζ0 = 7.0
-ζ1 = 2.0
-ζ2 = 1.0
+aMin, aMax, bMin, bMax, s0, s1, s2, k0, k1, g0, g1, g2, g3, g4, c0, c1, d0, d1, h, e :: Double
+aMin = 0.1
+aMax = 1.0
+bMin = 0.1
+bMax = 1.0
+s0 = 7.0
+s1 = 2.0
+s2 = 1.0
 k0 = 1.0
 k1 = 0.01
-γ0 = 0.8
-γ1 = 0.8
-γ2 = 2.2
-γ3 = -0.3
-γ4 = 0.3
+g0 = 0.8
+g1 = 0.8
+g2 = 2.2
+g3 = -0.3
+g4 = 0.3
 c0 = 1.0
 c1 = 0.01
-δ0 = 0.486
-δ1 = 1.052
+d0 = 0.486
+d1 = 1.052
 h  = 1.0
 e  = 1.0
 
 -- initial conditions
-initVals :: Vector D
+initVals :: Vector Double
 initVals = fromList [ 0.5, 0.5, 0.5, 0.5 ]
 
 -- the differential equations themselves
 -- TODO: some equations can be factored out and
 -- TODO: differentiation related boilerplate reduced
 
-dx :: D -> D -> D -> D -> D
-dx x y α β = x*ζ*(1 - x/k) - (γ*x*y / (1 + h*x))
+dx :: Double -> Double -> Double -> Double -> Double
+dx x y a b = x*sigma*(1 - x/kapa) - (gamma*x*y / (1 + h*x))
   where
-    ζ = ζ0 + ζ1*α + ζ2*α**2
-    k = k0 + k1*α
-    γ = γ0 + γ1*α + γ2*β + γ3*α*β + γ4*β**2
+    kapa  = k0 + k1*a
+    sigma = s0 + s1*a + s2*a**2
+    gamma = g0 + g1*a + g2*b + g3*a*b + g4*b**2
 
-dy :: D -> D -> D -> D -> D
-dy x y α β = c * (γ*x*y / (1 + h*x)) - y*δ
+dy :: Double -> Double -> Double -> Double -> Double
+dy x y a b = c * (gamma*x*y / (1 + h*x)) - y*delta
   where
-    c = c0 + c1*β
-    γ = γ0 + γ1*α + γ2*β + γ3*α*β + γ4*β**2
-    δ = δ0 + δ1*β
+    c = c0 + c1*b
+    gamma = g0 + g1*a + g2*b + g3*a*b + g4*b**2
+    delta = d0 + d1*b
 
-dα :: D -> D -> D -> D -> D
-dα x y α β = (1/e) * a * (dζ_α * (1 - x/k) + dγ_α * (y / (1 + h*x)))
+da :: Double -> Double -> Double -> Double -> Double
+da x y a b = (1/e) * aa * (dsigma_a * (1 - x/k) + dgamma_a * (y / (1 + h*x)))
   where
-    a = (α - αMin)*(αMax - α)
-    k = k0 + k1*α
+    aa = (a - aMin)*(aMax - a)
+    k  = k0 + k1*a
     -- derivatives: dζ/dα and ∂γ/∂α
-    dζ_α = diff (\α -> auto ζ0 + auto ζ1*α + auto ζ2*α**2) α
-    dγ_α = head $ grad (\[α, β] -> auto γ0 + auto γ1*α + auto γ2*β + auto γ3*α*β + auto  γ4*β**2) [α, β]
+    dsigma_a = diff (\ a -> auto s0 + auto s1*a + auto s2*a**2) a
+    dgamma_a = head $ grad (\ [a, b] -> auto g0 + auto g1*a + auto g2*b + auto g3*a*b + auto  g4*b**2) [a, b]
 
-dβ :: D -> D -> D -> D -> D
-dβ x y α β = (1/e) * b * (c * dγ_β * (x*y/(1 + h*x)) - dδ_β)
+db :: Double -> Double -> Double -> Double -> Double
+db x y a b = (1/e) * bb * (c * dgamma_b * (x*y/(1 + h*x)) - ddelta_b)
   where
-    b = (β - βMin)*(βMax - β)
-    c = c0 + c1*β
-    k = k0 + k1*α
+    bb = (b - bMin)*(bMax - b)
+    c  = c0 + c1*b
     -- derivatives: ∂y/∂β and dδ/dβ
-    dγ_β = last $ grad (\[α, β] -> auto γ0 + auto γ1*α + auto γ2*β + auto γ3*α*β + auto γ4*β**2) [α, β]
-    dδ_β = diff (\β -> auto δ0 + auto δ1*β) β
+    dgamma_b = last $ grad (\ [a, b] -> auto g0 + auto g1*a + auto g2*b + auto g3*a*b + auto g4*b**2) [a, b]
+    ddelta_b = diff (\ b -> auto d0 + auto d1*b) b
 
 -- HOW CAN I MAKE ALL FUNCTIONS NOT USE GLOBALS?
-eqSystem :: D -> Vector D -> Vector D
-eqSystem t vars = fromList [ dx x y α β
-                           , dy x y α β
-                           , dα x y α β
-                           , dβ x y α β ]
+eqSystem :: Double -> Vector Double -> Vector Double
+eqSystem t vars = fromList [ dx x y a b
+                           , dy x y a b
+                           , da x y a b
+                           , db x y a b ]
   where
-    [x, y, α, β] = toList vars
+    [x, y, a, b] = toList vars
 
 -- the time (steps)
-times :: Vector D
-times = linspace 5000 (0, 499 :: D)
+times :: Vector Double
+times = linspace 5000 (0, 499 :: Double)
 
 -- the solutions matrix
-solution :: Matrix D
+solution :: Matrix Double
 solution = odeSolveV
   RK8pd    -- ODE Method
   1E-8     -- initial step size
@@ -112,7 +109,7 @@ solution = odeSolveV
 -- creates a list of lists containing tuples
 -- for each variable and the corresponding time
 -- necessary to satisfy plotting funtion
-makePlottableTuples :: Vector D -> Matrix D -> [[(D, D)]]
+makePlottableTuples :: Vector Double -> Matrix Double -> [[(Double, Double)]]
 makePlottableTuples v m = map (zip (toList v) . toList) (toColumns m)
 
 -- create a string like "2017-06-09_131211"
@@ -131,7 +128,7 @@ timePlot = do
 
 phasePlot = do
   layout_title .= "Cortez / Weitz – phase space"
-  plot $ line "prey - predator" [ map (\[x, y, _, _] -> (x, y)) $ toLists solution ]
+  plot $ line "prey - predator" [ map (\ [x, y, _, _] -> (x, y)) $ toLists solution ]
 
 writePlot filePath plot = BC.toFile def {BC._fo_format=BC.PDF} filePath plot
 
