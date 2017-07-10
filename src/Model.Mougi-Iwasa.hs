@@ -1,11 +1,15 @@
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (defaultTimeLocale, formatTime)
 
-import Graphics.Rendering.Chart.Backend.Cairo (toFile, FileFormat(..), _fo_format)
+import qualified Graphics.Rendering.Chart.Backend.Cairo as BC
 import Graphics.Rendering.Chart.Easy ((.=), def, layout_title, plot, line)
 import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, fromList, toColumns)
-import Numeric.GSL.ODE (odeSolveV, ODEMethod(..))
-import Numeric.AD hiding (du)
+import Numeric.GSL.ODE (ODEMethod(..), odeSolveV)
+import Numeric.GSL.Differentiation (derivCentral)
+
+-- alias differentiation function to central derivative with initial step size 0.01
+diff :: (Double -> Double) -> Double -> Double
+diff fun point = fst $ derivCentral 0.005 fun point
 
 -- constant parameters
 e   = 1.0
@@ -22,51 +26,34 @@ g0  = 1.0
 
 -- initial conditions
 initVals :: Vector Double
-initVals = fromList [ 0.1, 0.1, 0.1, 0.1 ]
-
--- the differential equations themselves
--- TODO: some equations can be factored out and
--- TODO: differentiation related boilerplate reduced
-
-dx :: Double -> Double -> Double -> Double -> Double
-dx x y u v = (r u v - e*x - a u v *y/(1 + a u v *h*x))*x
-
-dy :: Double -> Double -> Double -> Double -> Double
-dy x y u v = (g* a u v *y/(1 + a u v *h*x) - d)*y
-
-du :: Double -> Double -> Double -> Double -> Double
-du x y u v = gx * dWx_du
-  where
-    dWx_du x y u v = grad (\ [x y u v] -> auto (r u v) - auto e * x - auto (a u v) )
-
--- dgamma_b = last $ grad (\ [a, b] -> auto g0 + auto g1*a + auto g2*b + auto g3*a*b + auto g4*b**2) [a, b]
-
-dv :: Double -> Double -> Double -> Double -> Double
-dv x y u v = gy * dWy_dv
-  where
-    dWy_dv = undefined
+initVals = fromList [ 0.5, 0.5, 0.5, 0.5 ]
 
 -- sub functions
+a :: Double -> Double -> Double
 a u v = a0 / (1 + exp (th*(u-v)))
-r u v = r0 * (1 - u^rhX)
-g u v = g0 * (1 - v^rhY)
 
-wx :: Double -> Double -> Double -> Double -> Double
-wx x y u v = r u v - e*x - a u v *y/(1 + a u v *h*x)
+r, g :: Double -> Double
+r u = r0 * (1 - u**rhX)
+g v = g0 * (1 - v**rhY)
 
-wy :: Double -> Double -> Double -> Double -> Double
-wy x y u v = g* a u v *y/(1 + a u v *h*x) - d
+-- differential equations
+dx, dy, du, dv, wx, wy :: Double -> Double -> Double -> Double -> Double
+dx x y u v = (r u - e*x - a u v *y/(1 + a u v *h*x))*x
+dy x y u v = (g v * a u v *y/(1 + a u v *h*x) - d)*y
+du x y u v = gx * diff (flip (wx x y) v) u -- dWx_du
+dv x y u v = gy * diff       (wy x y u)  v -- dWy_dv
 
--- HOW CAN I MAKE ALL FUNCTIONS NOT USE GLOBALS?
+-- fitness defined as per capita growth rate of x and y
+wx x y u v = 1/x * dx x y u v
+wy x y u v = 1/y * dy x y u v
+
 eqSystem :: Double -> Vector Double -> Vector Double
-eqSystem t vars = fromList [ dx x y u v
-                           , dy x y u v
-                           , du x y u v
-                           , dv x y u v ]
+eqSystem t vars = fromList [ dx x y u v, dy x y u v
+                           , du x y u v, dv x y u v ]
   where
     [x, y, u, v] = toList vars
 
--- the time (steps)
+-- the time steps for which the result is given
 times :: Vector Double
 times = linspace 5000 (0, 499 :: Double)
 
@@ -96,20 +83,20 @@ getNowTimeString = do
   pure (formatTime defaultTimeLocale "%F_%H%M%S" now)
 
 timePlot = do
-  layout_title .= "Cortez / Weitz – time series"
+  layout_title .= "Mougi / Iwasa – time series"
   plot $ line "prey"     [makePlottableTuples times solution !! 0]
   plot $ line "predator" [makePlottableTuples times solution !! 1]
-  plot $ line "trait α"  [makePlottableTuples times solution !! 2]
-  plot $ line "trait β"  [makePlottableTuples times solution !! 3]
+  plot $ line "trait u"  [makePlottableTuples times solution !! 2]
+  plot $ line "trait v"  [makePlottableTuples times solution !! 3]
 
 phasePlot = do
-  layout_title .= "Cortez / Weitz – phase space"
+  layout_title .= "Mougi / Iwasa – phase space"
   plot $ line "prey - predator" [ map (\ [x, y, _, _] -> (x, y)) $ toLists solution ]
 
-writePlot filePath plot = toFile def {_fo_format=PDF} filePath plot
+writePlot filePath plot = BC.toFile def {BC._fo_format=BC.PDF} filePath plot
 
 main :: IO ()
 main = do
   timeStr <- getNowTimeString
-  writePlot ("plots/CW_timePlot_" ++ timeStr ++ ".pdf") timePlot
-  writePlot ("plots/CW_phasePlot_" ++ timeStr ++ ".pdf") phasePlot
+  writePlot ("plots/MI_timePlot_" ++ timeStr ++ ".pdf") timePlot
+  writePlot ("plots/MI_phasePlot_" ++ timeStr ++ ".pdf") phasePlot
