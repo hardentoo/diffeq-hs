@@ -6,10 +6,9 @@ import Graphics.Rendering.Chart.Easy ((.=), def, layout_title, plot, line)
 import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, fromList, toColumns)
 import Numeric.GSL.ODE
 import Numeric.GSL.Differentiation
-import Numeric.AD
 
 -- alias differentiation function to central derivative with initial step size 0.01
-diff_ fun point = fst $ derivCentral 0.01 fun point
+diff fun point = fst $ derivCentral 0.01 fun point
 
 -- constant parameters
 aMin, aMax, bMin, bMax, s0, s1, s2, k0, k1, g0, g1, g2, g3, g4, c0, c1, d0, d1, h, e :: Double
@@ -54,17 +53,11 @@ dx x y a b = x* s a *(1 - x/ k a) - (g a b *x*y / (1 + h*x))
 
 dy x y a b = c b * (g a b *x*y / (1 + h*x)) - y* d b
 
-da x y a b = (1/e) * aa a * (ds_a * (1 - x/ k a) + dg_a * (y / (1 + h*x)))
+da x y a b = (1/e) * aa a * (diff s a * (1 - x/ k a) + dg_a * (y / (1 + h*x)))
   where
-    -- derivatives: dζ/dα and ∂γ/∂α
-    ds_a = diff_ (\ a -> s0 + s1*a + s2*a**2) a
-    dg_a = head $ grad (\ [a, b] -> auto g0 + auto g1*a + auto g2*b + auto g3*a*b + auto  g4*b**2) [a, b]
+    dg_a = diff (flip g b) a
 
-db x y a b = (1/e) * bb b * (c b *dg_b*(x*y/(1 + h*x)) - dd_b)
-  where
-    -- derivatives: ∂y/∂β and dδ/dβ
-    dg_b = last $ grad (\ [a, b] -> auto g0 + auto g1*a + auto g2*b + auto g3*a*b + auto g4*b**2) [a, b]
-    dd_b = diff_ (\ b -> d0 + d1*b) b
+db x y a b = (1/e) * bb b * (c b * diff (g a) b *(x*y/(1 + h*x)) - diff d b)
 
 -- the equation system that is passed to the solver
 -- because the solver expects a function of this type,
@@ -104,7 +97,7 @@ makePlottableTuples v m = map (zip (toList v) . toList) (toColumns m)
 getNowTimeString :: IO String
 getNowTimeString = do
   now <- getCurrentTime
-  return (formatTime defaultTimeLocale "%F_%H%M%S" now)
+  pure (formatTime defaultTimeLocale "%F_%H%M%S" now)
 
 timePlot = do
   layout_title .= "Cortez / Weitz – time series"
