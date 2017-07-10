@@ -5,42 +5,66 @@ import Graphics.Rendering.Chart.Backend.Cairo (toFile, FileFormat(..), _fo_forma
 import Graphics.Rendering.Chart.Easy ((.=), def, layout_title, plot, line)
 import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, fromList, toColumns)
 import Numeric.GSL.ODE (odeSolveV, ODEMethod(..))
-import Numeric.AD
-
--- data Par = Par {} deriving (Show, Generic)
-
--- instance DC.Interpret Par
+import Numeric.AD hiding (du)
 
 -- constant parameters
+e   = 1.0
+h   = 0.1
+d   = 0.1
+gx  = 0.01
+gy  = 0.01
+th  = 10.0
+rhX = 2.0
+rhY = 2.0
+a0  = 1.0
+r0  = 1.0
+g0  = 1.0
 
 -- initial conditions
 initVals :: Vector Double
-initVals = fromList [ 0.5, 0.5, 0.5, 0.5 ]
+initVals = fromList [ 0.1, 0.1, 0.1, 0.1 ]
 
 -- the differential equations themselves
 -- TODO: some equations can be factored out and
 -- TODO: differentiation related boilerplate reduced
 
 dx :: Double -> Double -> Double -> Double -> Double
-dx x y a b = undefined
+dx x y u v = (r u v - e*x - a u v *y/(1 + a u v *h*x))*x
 
 dy :: Double -> Double -> Double -> Double -> Double
-dy x y a b = undefined
+dy x y u v = (g* a u v *y/(1 + a u v *h*x) - d)*y
 
-da :: Double -> Double -> Double -> Double -> Double
-da x y a b = undefined
+du :: Double -> Double -> Double -> Double -> Double
+du x y u v = gx * dWx_du
+  where
+    dWx_du x y u v = grad (\ [x y u v] -> auto (r u v) - auto e * x - auto (a u v) )
 
-db :: Double -> Double -> Double -> Double -> Double
-db x y a b = undefined
+-- dgamma_b = last $ grad (\ [a, b] -> auto g0 + auto g1*a + auto g2*b + auto g3*a*b + auto g4*b**2) [a, b]
+
+dv :: Double -> Double -> Double -> Double -> Double
+dv x y u v = gy * dWy_dv
+  where
+    dWy_dv = undefined
+
+-- sub functions
+a u v = a0 / (1 + exp (th*(u-v)))
+r u v = r0 * (1 - u^rhX)
+g u v = g0 * (1 - v^rhY)
+
+wx :: Double -> Double -> Double -> Double -> Double
+wx x y u v = r u v - e*x - a u v *y/(1 + a u v *h*x)
+
+wy :: Double -> Double -> Double -> Double -> Double
+wy x y u v = g* a u v *y/(1 + a u v *h*x) - d
 
 -- HOW CAN I MAKE ALL FUNCTIONS NOT USE GLOBALS?
 eqSystem :: Double -> Vector Double -> Vector Double
-eqSystem t vars = fromList [ dx x y a b
-                           , dy x y a b
-                           , da x y a b
-                           , db x y a b ]
+eqSystem t vars = fromList [ dx x y u v
+                           , dy x y u v
+                           , du x y u v
+                           , dv x y u v ]
   where
-    [x, y, a, b] = toList vars
+    [x, y, u, v] = toList vars
 
 -- the time (steps)
 times :: Vector Double

@@ -1,9 +1,9 @@
-{-# LANGUAGE DeriveGeneric     #-} -- for Dhall
-{-# LANGUAGE RecordWildCards   #-} -- for passing parameters
-{-# LANGUAGE OverloadedStrings #-} -- for Dhall
+-- {-# LANGUAGE DeriveGeneric     #-} -- for Dhall
+-- {-# LANGUAGE RecordWildCards   #-} -- for passing parameters
+-- {-# LANGUAGE OverloadedStrings #-} -- for Dhall
 
-import qualified Dhall as DC
-import qualified GHC.Generics as G -- for Dhall
+-- import qualified Dhall as DC
+-- import qualified GHC.Generics as G -- for Dhall
 
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (defaultTimeLocale, formatTime)
@@ -14,9 +14,8 @@ import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, fromLis
 import Numeric.GSL.ODE
 import Numeric.AD
 
-data Par = Par {} deriving (Show, G.Generic)
-
-instance DC.Interpret Par
+-- data Par = Par {} deriving (Show, G.Generic)
+-- instance DC.Interpret Par
 
 -- constant parameters
 aMin, aMax, bMin, bMax, s0, s1, s2, k0, k1, g0, g1, g2, g3, g4, c0, c1, d0, d1, h, e :: Double
