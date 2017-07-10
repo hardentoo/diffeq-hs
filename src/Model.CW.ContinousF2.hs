@@ -4,8 +4,8 @@ import Data.Time.Format (defaultTimeLocale, formatTime)
 import qualified Graphics.Rendering.Chart.Backend.Cairo as BC
 import Graphics.Rendering.Chart.Easy ((.=), def, layout_title, plot, line)
 import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, fromList, toColumns)
-import Numeric.GSL.ODE
-import Numeric.GSL.Differentiation
+import Numeric.GSL.ODE (ODEMethod(..), odeSolveV)
+import Numeric.GSL.Differentiation (derivCentral)
 
 -- alias differentiation function to central derivative with initial step size 0.01
 diff fun point = fst $ derivCentral 0.01 fun point
@@ -48,15 +48,9 @@ bb b   = (b - bMin)*(bMax - b)
 
 -- the differential equations themselves
 dx, dy, da, db :: Double -> Double -> Double -> Double -> Double
-
 dx x y a b = x* s a *(1 - x/ k a) - (g a b *x*y / (1 + h*x))
-
 dy x y a b = c b * (g a b *x*y / (1 + h*x)) - y* d b
-
-da x y a b = (1/e) * aa a * (diff s a * (1 - x/ k a) + dg_a * (y / (1 + h*x)))
-  where
-    dg_a = diff (flip g b) a
-
+da x y a b = (1/e) * aa a * (diff s a * (1 - x/ k a) + diff (`g` b) a * (y / (1 + h*x)))
 db x y a b = (1/e) * bb b * (c b * diff (g a) b *(x*y/(1 + h*x)) - diff d b)
 
 -- the equation system that is passed to the solver
