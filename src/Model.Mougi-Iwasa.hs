@@ -39,7 +39,7 @@ g v = g0 * (1 - v**rhY)
 -- differential equations
 dx, dy, du, dv, wx, wy :: Double -> Double -> Double -> Double -> Double
 dx x y u v = (r u - e*x - a u v *y/(1 + a u v *h*x))*x
-dy x y u v = (g v * a u v *y/(1 + a u v *h*x) - d)*y
+dy x y u v = (g v *       a u v *x/(1 + a u v *h*x) - d)*y
 du x y u v = gx * diff (flip (wx x y) v) u -- dWx_du
 dv x y u v = gy * diff       (wy x y u)  v -- dWy_dv
 
@@ -55,7 +55,7 @@ eqSystem t vars = fromList [ dx x y u v, dy x y u v
 
 -- the time steps for which the result is given
 times :: Vector Double
-times = linspace 5000 (0, 499 :: Double)
+times = linspace 5000 (0, 999 :: Double)
 
 -- the solutions matrix
 solution :: Matrix Double
