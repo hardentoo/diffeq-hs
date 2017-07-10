@@ -8,4 +8,7 @@ echo Running "$1"
 
 time (stack runghc "$1")
 
-open ./plots/*
+unamestr=$(uname)
+if [[ "$unamestr" == 'Darwin' ]]; then
+  open ./plots/*
+fi
