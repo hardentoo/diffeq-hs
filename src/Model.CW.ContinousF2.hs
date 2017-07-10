@@ -5,7 +5,11 @@ import qualified Graphics.Rendering.Chart.Backend.Cairo as BC
 import Graphics.Rendering.Chart.Easy ((.=), def, layout_title, plot, line)
 import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, fromList, toColumns)
 import Numeric.GSL.ODE
+import Numeric.GSL.Differentiation
 import Numeric.AD
+
+-- alias differentiation function to central derivative with initial step size 0.01
+diff_ fun point = fst $ derivCentral 0.01 fun point
 
 -- constant parameters
 aMin, aMax, bMin, bMax, s0, s1, s2, k0, k1, g0, g1, g2, g3, g4, c0, c1, d0, d1, h, e :: Double
@@ -34,52 +38,46 @@ e  = 1.0
 initVals :: Vector Double
 initVals = fromList [ 0.5, 0.5, 0.5, 0.5 ]
 
+-- sub functions
+g  a b = g0 + g1*a + g2*b + g3*a*b + g4*b**2
+s  a   = s0 + s1*a + s2*a**2
+k  a   = k0 + k1*a
+c  b   = c0 + c1*b
+d  b   = d0 + d1*b
+aa a   = (a - aMin)*(aMax - a)
+bb b   = (b - bMin)*(bMax - b)
+
 -- the differential equations themselves
--- TODO: some equations can be factored out and
--- TODO: differentiation related boilerplate reduced
+dx, dy, da, db :: Double -> Double -> Double -> Double -> Double
 
-dx :: Double -> Double -> Double -> Double -> Double
-dx x y a b = x*sigma*(1 - x/kapa) - (gamma*x*y / (1 + h*x))
-  where
-    kapa  = k0 + k1*a
-    sigma = s0 + s1*a + s2*a**2
-    gamma = g0 + g1*a + g2*b + g3*a*b + g4*b**2
+dx x y a b = x* s a *(1 - x/ k a) - (g a b *x*y / (1 + h*x))
 
-dy :: Double -> Double -> Double -> Double -> Double
-dy x y a b = c * (gamma*x*y / (1 + h*x)) - y*delta
-  where
-    c = c0 + c1*b
-    gamma = g0 + g1*a + g2*b + g3*a*b + g4*b**2
-    delta = d0 + d1*b
+dy x y a b = c b * (g a b *x*y / (1 + h*x)) - y* d b
 
-da :: Double -> Double -> Double -> Double -> Double
-da x y a b = (1/e) * aa * (dsigma_a * (1 - x/k) + dgamma_a * (y / (1 + h*x)))
+da x y a b = (1/e) * aa a * (ds_a * (1 - x/ k a) + dg_a * (y / (1 + h*x)))
   where
-    aa = (a - aMin)*(aMax - a)
-    k  = k0 + k1*a
     -- derivatives: dζ/dα and ∂γ/∂α
-    dsigma_a = diff (\ a -> auto s0 + auto s1*a + auto s2*a**2) a
-    dgamma_a = head $ grad (\ [a, b] -> auto g0 + auto g1*a + auto g2*b + auto g3*a*b + auto  g4*b**2) [a, b]
+    ds_a = diff_ (\ a -> s0 + s1*a + s2*a**2) a
+    dg_a = head $ grad (\ [a, b] -> auto g0 + auto g1*a + auto g2*b + auto g3*a*b + auto  g4*b**2) [a, b]
 
-db :: Double -> Double -> Double -> Double -> Double
-db x y a b = (1/e) * bb * (c * dgamma_b * (x*y/(1 + h*x)) - ddelta_b)
+db x y a b = (1/e) * bb b * (c b *dg_b*(x*y/(1 + h*x)) - dd_b)
   where
-    bb = (b - bMin)*(bMax - b)
-    c  = c0 + c1*b
     -- derivatives: ∂y/∂β and dδ/dβ
-    dgamma_b = last $ grad (\ [a, b] -> auto g0 + auto g1*a + auto g2*b + auto g3*a*b + auto g4*b**2) [a, b]
-    ddelta_b = diff (\ b -> auto d0 + auto d1*b) b
+    dg_b = last $ grad (\ [a, b] -> auto g0 + auto g1*a + auto g2*b + auto g3*a*b + auto g4*b**2) [a, b]
+    dd_b = diff_ (\ b -> d0 + d1*b) b
 
--- HOW CAN I MAKE ALL FUNCTIONS NOT USE GLOBALS?
+-- the equation system that is passed to the solver
+-- because the solver expects a function of this type,
+-- a vector of doubles from the differential equation
+-- functions, applied to their arguments is constructed.
+-- the arguments are unpacked from a vector for the same reason.
 eqSystem :: Double -> Vector Double -> Vector Double
-eqSystem t vars = fromList [ dx x y a b
-                           , dy x y a b
-                           , da x y a b
-                           , db x y a b ]
+eqSystem t vars = fromList [ dx x y a b, dy x y a b
+                           , da x y a b, db x y a b ]
   where
     [x, y, a, b] = toList vars
 
--- the time (steps)
+-- the time steps for which the result is given
 times :: Vector Double
 times = linspace 5000 (0, 499 :: Double)
 
