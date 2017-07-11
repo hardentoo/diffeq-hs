@@ -14,21 +14,12 @@ import Util (diff, getNowTimeString, makePlottableTuples, writePlot)
 import qualified Dhall as D
 
 data Par = Par {
-  e   :: Double,
-  h   :: Double,
-  d   :: Double,
-  gx  :: Double,
-  gy  :: Double,
-  th  :: Double,
-  rhX :: Double,
-  rhY :: Double,
-  a0  :: Double,
-  r0  :: Double,
-  g0  :: Double
+  e, h, d, gx, gy, th, rhX, rhY, a0, r0, g0 :: Double
 } deriving (Show, D.Generic)
 
 instance D.Interpret Par
 
+-- constant parameters
 par :: Par
 par = Par {
   e   = 1.0,
@@ -43,20 +34,6 @@ par = Par {
   r0  = 1.0,
   g0  = 1.0
 }
-
--- constant parameters
--- e, h, d, gx, gy, th, rhX, rhY, a0, r0, g0 :: Double
--- e   = 1.0
--- h   = 0.1
--- d   = 0.1
--- gx  = 0.01
--- gy  = 0.01
--- th  = 10.0
--- rhX = 2.0
--- rhY = 2.0
--- a0  = 1.0
--- r0  = 1.0
--- g0  = 1.0
 
 -- initial conditions
 initVals :: Vector Double
