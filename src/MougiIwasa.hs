@@ -1,4 +1,4 @@
-module Model.MougiIwasa where
+module MougiIwasa (runModel) where
 
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (defaultTimeLocale, formatTime)
@@ -14,6 +14,7 @@ diff :: (Double -> Double) -> Double -> Double
 diff fun point = fst $ derivCentral 0.01 fun point
 
 -- constant parameters
+e, h, d, gx, gy, th, rhX, rhY, a0, r0, g0 :: Double
 e   = 1.0
 h   = 0.1
 d   = 0.1
@@ -97,8 +98,8 @@ phasePlot = do
 
 writePlot filePath plot = BC.toFile def {BC._fo_format=BC.PDF} filePath plot
 
-main :: IO ()
-main = do
+runModel :: IO ()
+runModel = do
   timeStr <- getNowTimeString
   writePlot ("plots/MI_timePlot_" ++ timeStr ++ ".pdf") timePlot
   writePlot ("plots/MI_phasePlot_" ++ timeStr ++ ".pdf") phasePlot

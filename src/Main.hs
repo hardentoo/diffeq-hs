@@ -1,4 +1,6 @@
 module Main where
 
+import MougiIwasa as MI
+
 main :: IO ()
-main = putStrLn "Dummy Main.hs"
+main = MI.runModel
