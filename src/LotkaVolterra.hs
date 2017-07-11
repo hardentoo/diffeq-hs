@@ -1,3 +1,5 @@
+module LotkaVolterra where
+
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (defaultTimeLocale, formatTime)
 
