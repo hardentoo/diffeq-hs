@@ -1,6 +1,6 @@
 module Main where
 
-import MougiIwasa as MI
+import MougiIwasa (runMougiIwasa)
 
 main :: IO ()
-main = MI.runModel
+main = runMougiIwasa
