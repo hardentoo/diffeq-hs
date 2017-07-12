@@ -1,0 +1,28 @@
+name: diffeq-hs
+version: '0.1.0.0'
+description: Solving ODEs with Haskell
+author: Thaddäus Töppen
+copyright: 2017 Thaddäus Töppen
+license: BSD3
+homepage: https://github.com/ttoe/diffeq-hs#readme
+extra-source-files:
+- README.md
+dependencies:
+- base >=4.7 && <5
+- hmatrix
+- hmatrix-gsl
+- Chart
+- Chart-cairo
+- time
+library:
+  source-dirs: src
+  ghc-options: -O2
+  exposed-modules:
+  - MougiIwasa
+  - Parameters
+  - Util
+executables:
+  diffeq-hs:
+    main: Main.hs
+    source-dirs: src
+    ghc-options: -O2
