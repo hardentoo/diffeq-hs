@@ -1,6 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module MougiIwasa (runMougiIwasa) where
 
@@ -10,34 +8,11 @@ import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, fromLis
 import Numeric.GSL.ODE (ODEMethod(..), odeSolveV)
 
 import Util (diff, getNowTimeString, makePlottableTuples, writePlot)
+import Parameters (Par(..), par)
 
-import qualified Dhall as D
-
-data Par = Par {
-  e, h, d, gx, gy, th, rhX, rhY, a0, r0, g0 :: Double
-} deriving (Show, D.Generic)
-
-instance D.Interpret Par
-
--- constant parameters
-par :: Par
-par = Par {
-  e   = 1.0,
-  h   = 0.1,
-  d   = 0.1,
-  gx  = 0.01,
-  gy  = 0.01,
-  th  = 10.0,
-  rhX = 2.0,
-  rhY = 2.0,
-  a0  = 1.0,
-  r0  = 1.0,
-  g0  = 1.0
-}
-
--- initial conditions
+-- initial conditions: [ x0, y0, u0, v0 ]
 initVals :: Vector Double
-initVals = fromList [ 0.5, 0.5, 0.5, 0.5 ]
+initVals = fromList [ 0.5, 0.5, 0.1, 0.1 ]
 
 -- sub functions
 a :: Par -> Double -> Double -> Double
@@ -66,12 +41,12 @@ eqSystem t vars = fromList [ dx par x y u v, dy par x y u v
 
 -- the time steps for which the result is given
 times :: Vector Double
-times = linspace 2000 (0, 999 :: Double)
+times = linspace 10000 ( 0, 9999 :: Double )
 
 -- the solutions matrix
 solution :: Matrix Double
 solution = odeSolveV
-  RK8pd    -- ODE Method
+  RKf45    -- ODE Method
   1E-8     -- initial step size
   1E-8     -- absolute tolerance for the state vector
   0        -- relative tolerance for the state vector
