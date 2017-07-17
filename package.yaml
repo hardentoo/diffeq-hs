@@ -5,6 +5,8 @@ author: Thaddäus Töppen
 copyright: 2017 Thaddäus Töppen
 license: BSD3
 homepage: https://github.com/ttoe/diffeq-hs#readme
+default-extensions:
+- NoImplicitPrelude
 extra-source-files:
 - README.md
 dependencies:
@@ -14,9 +16,10 @@ dependencies:
 - Chart
 - Chart-cairo
 - time
+- foundation
 library:
   source-dirs: src
-  ghc-options: -O2
+  ghc-options: -O2 -freverse-errors
   exposed-modules:
   - MougiIwasa
   - Parameters
@@ -25,4 +28,4 @@ executables:
   diffeq-hs:
     main: Main.hs
     source-dirs: src
-    ghc-options: -O2
+    ghc-options: -O2 -freverse-errors

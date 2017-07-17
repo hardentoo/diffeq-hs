@@ -2,17 +2,21 @@
 
 module MougiIwasa (runMougiIwasa) where
 
+import Foundation
+import Data.List ((!!))
+import Numeric  ((**), exp)
+
 import Graphics.Rendering.Chart.Easy ((.=), layout_title, plot, line)
 
-import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, fromList)
+import qualified Numeric.LinearAlgebra as LA
 import Numeric.GSL.ODE (ODEMethod(..), odeSolveV)
 
 import Util (diff, getNowTimeString, makePlottableTuples, writePlot)
 import Parameters (Par(..), par)
 
 -- initial conditions: [ x0, y0, u0, v0 ]
-initVals :: Vector Double
-initVals = fromList [ 0.5, 0.5, 0.1, 0.1 ]
+initVals :: LA.Vector Double
+initVals = LA.fromList [ 0.5, 0.5, 0.1, 0.1 ]
 
 -- sub functions
 a :: Par -> Double -> Double -> Double
@@ -33,18 +37,18 @@ dv Par{..} x y u v = gy * diff       (wy par x y u)  v -- dWy_dv
 wx Par{..} x y u v = 1/x * dx par x y u v
 wy Par{..} x y u v = 1/y * dy par x y u v
 
-eqSystem :: Double -> Vector Double -> Vector Double
-eqSystem t vars = fromList [ dx par x y u v, dy par x y u v
-                           , du par x y u v, dv par x y u v ]
+eqSystem :: Double -> LA.Vector Double -> LA.Vector Double
+eqSystem t vars = LA.fromList [ dx par x y u v, dy par x y u v
+                              , du par x y u v, dv par x y u v ]
   where
-    [x, y, u, v] = toList vars
+    [x, y, u, v] = LA.toList vars
 
 -- the time steps for which the result is given
-times :: Vector Double
-times = linspace 10000 ( 0, 9999 :: Double )
+times :: LA.Vector Double
+times = LA.linspace 10000 ( 0, 9999 :: Double )
 
 -- the solutions matrix
-solution :: Matrix Double
+solution :: LA.Matrix Double
 solution = odeSolveV
   RKf45    -- ODE Method
   1E-8     -- initial step size
@@ -63,10 +67,21 @@ timePlot = do
 
 phasePlot = do
   layout_title .= "Mougi / Iwasa – phase space"
-  plot $ line "prey - predator" [ map (\ [x, y, _, _] -> (x, y)) $ toLists solution ]
+  plot $ line "prey - predator" [ fmap (\ [x, y, _, _] -> (x, y)) $ LA.toLists solution ]
+
+
+-- to make a bifurcation we solve the system of ODEs for a range of parameters.
+-- usually one parameter is varied in a specified range and with a step size
+-- that allows the computation to terminate in a reasonable time.
+
+-- the approach is to create a vector of values for the parameter we want
+-- to create the bifurcation diagram for.
+-- mapping 
+bifurcate = undefined
+
 
 runMougiIwasa :: IO ()
 runMougiIwasa = do
   timeStr <- getNowTimeString
-  writePlot ("plots/MI_timePlot_" ++ timeStr ++ ".pdf") timePlot
-  writePlot ("plots/MI_phasePlot_" ++ timeStr ++ ".pdf") phasePlot
+  writePlot ("plots/MI_timePlot_" <> timeStr <> ".pdf") timePlot
+  writePlot ("plots/MI_phasePlot_" <> timeStr <> ".pdf") phasePlot

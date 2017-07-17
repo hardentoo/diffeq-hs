@@ -1,6 +1,9 @@
 module Parameters where
 
+import Foundation
+
 data Par = Par { e, h, d, gx, gy, th, rhX, rhY, a0, r0, g0 :: Double }
+  deriving (Show)
 
 par :: Par
 par = Par {

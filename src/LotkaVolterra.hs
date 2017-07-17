@@ -1,13 +1,18 @@
 module LotkaVolterra where
 
+import Data.List ((!!))
+import Foundation
+
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (defaultTimeLocale, formatTime)
 
 import qualified Graphics.Rendering.Chart.Backend.Cairo as BC
 import Graphics.Rendering.Chart.Easy ((.=), def, layout_title, setColors, opaque, blue, red, plot, line)
 
-import Numeric.LinearAlgebra (Vector, Matrix, linspace, toList, toLists, toColumns)
+import qualified Numeric.LinearAlgebra as LA
 import Numeric.GSL.ODE
+
+import Util
 
 type D = Double
 
@@ -31,26 +36,12 @@ eqs :: D -> [D] -> [D]
 eqs t [x, y] = [ dx x y, dy x y ]
 
 -- the time (steps)
-time :: Vector D
-time = linspace 1000 (0, 999 :: D)
+time :: LA.Vector D
+time = LA.linspace 1000 (0, 999 :: D)
 
 -- the solutions matrix
-sol :: Matrix D
+sol :: LA.Matrix D
 sol = odeSolve eqs [x0, y0] time
-
--- takes the time vector and the solution matrix
--- creates a list of lists containing tuples
--- for each variable and the corresponding time
--- necessary to satisfy plotting funtion
-makePlottableTuples :: Vector D -> Matrix D -> [[(D, D)]]
-makePlottableTuples v m = map (zip (toList v) . toList) (toColumns m)
-
--- create a string like "2017-06-09_131211"
--- as a timestamp to use for writing files
-getNowTimeString :: IO String
-getNowTimeString = do
-  now <- getCurrentTime
-  return (formatTime defaultTimeLocale "%F_%H%M%S" now)
 
 timePlot = do
   layout_title .= "Lotka-Volterra – time series"
@@ -61,12 +52,10 @@ timePlot = do
 phasePlot = do
   layout_title .= "Lotka-Volterra – phase space"
   setColors [opaque blue]
-  plot $ line "prey - predator" [ map (\[x, y] -> (x, y)) $ toLists sol]
-
-writePlot filePath plot = BC.toFile def {BC._fo_format=BC.PDF} filePath plot
+  plot $ line "prey - predator" [ fmap (\[x, y] -> (x, y)) $ LA.toLists sol]
 
 main :: IO ()
 main = do
   timeStr <- getNowTimeString
-  writePlot ("plots/LV_timePlot_" ++ timeStr ++ ".pdf") timePlot
-  writePlot ("plots/LV_phasePlot_" ++ timeStr ++ ".pdf") phasePlot
+  writePlot ("plots/LV_timePlot_" <> timeStr <> ".pdf") timePlot
+  writePlot ("plots/LV_phasePlot_" <> timeStr <> ".pdf") phasePlot

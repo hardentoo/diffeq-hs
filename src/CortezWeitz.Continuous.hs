@@ -1,5 +1,7 @@
 module CortezWeitz.Continuous where
 
+import Foundation
+
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (defaultTimeLocale, formatTime)
 
