@@ -3,11 +3,10 @@ module LotkaVolterra where
 import Data.List ((!!))
 import Foundation
 
-import Data.Time.Clock (getCurrentTime)
-import Data.Time.Format (defaultTimeLocale, formatTime)
+-- import Data.Time.Clock (getCurrentTime)
+-- import Data.Time.Format (defaultTimeLocale, formatTime)
 
-import qualified Graphics.Rendering.Chart.Backend.Cairo as BC
-import Graphics.Rendering.Chart.Easy ((.=), def, layout_title, setColors, opaque, blue, red, plot, line)
+import Graphics.Rendering.Chart.Easy ((.=), layout_title, setColors, opaque, blue, red, plot, line)
 
 import qualified Numeric.LinearAlgebra as LA
 import Numeric.GSL.ODE
