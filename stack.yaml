@@ -3,4 +3,8 @@ extra-package-dbs: []
 packages:
 - .
 extra-deps:
-resolver: lts-9.1
+- Chart-1.8.2
+- Chart-cairo-1.8.2
+- cairo-0.13.4.1
+- gtk2hs-buildtools-0.13.3.0
+resolver: nightly-2017-10-06

@@ -2,10 +2,10 @@
 
 echo "Compilation:"
 echo "============"
-time (stack install)
+time (stack build)
 
 echo ""
 
 echo "Execution:"
 echo "=========="
-time diffeq-hs
+time stack exec diffeq-hs

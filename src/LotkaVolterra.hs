@@ -3,9 +3,6 @@ module LotkaVolterra where
 import Data.List ((!!))
 import Foundation
 
--- import Data.Time.Clock (getCurrentTime)
--- import Data.Time.Format (defaultTimeLocale, formatTime)
-
 import Graphics.Rendering.Chart.Easy ((.=), layout_title, setColors, opaque, blue, red, plot, line)
 
 import qualified Numeric.LinearAlgebra as LA

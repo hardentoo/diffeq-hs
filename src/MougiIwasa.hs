@@ -45,7 +45,7 @@ eqSystem t vars = LA.fromList [ dx par x y u v, dy par x y u v
 
 -- the time steps for which the result is given
 times :: LA.Vector Double
-times = LA.linspace 10000 ( 0, 9999 :: Double )
+times = LA.linspace 100000 (0, 9999)
 
 -- the solutions matrix
 solution :: LA.Matrix Double
@@ -69,15 +69,12 @@ phasePlot = do
   layout_title .= "Mougi / Iwasa – phase space"
   plot $ line "prey - predator" [ fmap (\ [x, y, _, _] -> (x, y)) $ LA.toLists solution ]
 
-
 -- to make a bifurcation we solve the system of ODEs for a range of parameters.
 -- usually one parameter is varied in a specified range and with a step size
 -- that allows the computation to terminate in a reasonable time.
 
 -- the approach is to create a vector of values for the parameter we want
 -- to create the bifurcation diagram for.
--- mapping 
-bifurcate = undefined
 
 
 runMougiIwasa :: IO ()
